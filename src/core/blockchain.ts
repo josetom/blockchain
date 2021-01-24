@@ -1,11 +1,19 @@
+import axios, { AxiosResponse } from 'axios'
+import { Logger } from 'tslog'
+
 import Block from './block'
 import Transaction from './transaction'
 import { proofOfWork } from './algorithms'
+import { GetChainResponse, GetChainLengthResponse } from '../../types/types'
+import { validateChain } from './utils'
+
+const LOGGER:Logger = new Logger()
 
 class Blockchain {
 
     private chain:Block[]
     private transactions:Transaction[]
+    private nodes:Set<string>
 
     constructor() {
         this.chain = []
@@ -78,6 +86,51 @@ class Blockchain {
         })
 
         return this.newBlock(proof)
+    }
+
+    /**
+     * Adds a new node
+     * @param address
+     */
+    registerNode = (address:string) => {
+        this.nodes.add(address)
+    }
+
+    /**
+     * This is our Consensus Algorithm, it resolves conflicts by replacing our chain with the longest one in the network.
+     */
+    resolveConflicts = () => {
+        const neighbours:Set<string> = this.nodes
+        let maxLength = this.chain.length
+        let newChain:Block[]
+
+        // Verify the chains from all the nodes in our network
+        neighbours.forEach(async node => {
+            try {
+                const getChainLengthResponse:AxiosResponse<GetChainLengthResponse> = await axios.get(`http://${node}/chain/length`)
+                if(getChainLengthResponse.data.length > maxLength) {
+                    const getChainResponse:AxiosResponse<GetChainResponse> = await axios.get(`http://${node}/chain`)
+                    if(validateChain(getChainResponse.data.chain)) {
+                        maxLength = getChainLengthResponse.data.length
+                        newChain = getChainResponse.data.chain
+                    }
+                }
+            } catch (e) {
+                LOGGER.error(e)
+            }
+        })
+
+        if(newChain != null) {
+            // Replace our chain if we discovered a new, valid chain longer than ours
+            this.chain = newChain
+            return true
+        }
+
+        return false
+    }
+
+    getNodes = ():Set<string> => {
+        return this.nodes
     }
 
 }

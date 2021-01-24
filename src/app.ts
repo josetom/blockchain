@@ -23,6 +23,7 @@ app.use(bodyParser.json())
 app.get('/mine', (req:express.Request, res:express.Response) => {
     const block:Block = Blockchain.mine(NODE_IDENTIFIER)
     res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
         message: "New Block Forged",
         event: 'new_block',
         block
@@ -32,6 +33,7 @@ app.get('/mine', (req:express.Request, res:express.Response) => {
 app.post('/transactions', (req:express.Request, res:express.Response) => {
     const index:number = Blockchain.addTransaction(req.body)
     res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
         index,
         transaction: req.body
     })
@@ -39,8 +41,33 @@ app.post('/transactions', (req:express.Request, res:express.Response) => {
 
 app.get('/chain', (req:express.Request, res:express.Response) => {
     res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
         chain: Blockchain.getChain(),
         lastBlock: Blockchain.lastBlock()
+    })
+})
+
+app.get('/chain/length', (req:express.Request, res:express.Response) => {
+    res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
+        length: Blockchain.getChain().length,
+    })
+})
+
+app.get('/nodes', (req:express.Request, res:express.Response) => {
+    res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
+        length: Blockchain.getChain().length,
+        nodes: Blockchain.getNodes()
+    })
+})
+
+app.post('/nodes/register', (req:express.Request, res:express.Response) => {
+    Blockchain.registerNode(req.body.node)
+    res.json({
+        nodeIdentifier: NODE_IDENTIFIER,
+        length: Blockchain.getChain().length,
+        nodes: Blockchain.getNodes()
     })
 })
 

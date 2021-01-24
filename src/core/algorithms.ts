@@ -27,7 +27,7 @@ export const proofOfWork = (lastProof:number):number => {
  * @param lastProof
  * @param proof
  */
-const validateProof = (lastProof:number, proof:number):boolean => {
+export const validateProof = (lastProof:number, proof:number):boolean => {
     const guess = `${lastProof}${proof}`;
     const guessHash = hashSha256(guess)
     return guessHash.endsWith('0000')

@@ -32,4 +32,8 @@ export default class Block {
         return this.index
     }
 
+    getPreviousHash = ():string => {
+        return this.previousHash
+    }
+
 }
